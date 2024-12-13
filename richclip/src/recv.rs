@@ -1,15 +1,12 @@
 use anyhow::{bail, Context, Result};
 use std::io::Read;
 
+pub static PROTOCAL_VER: u8 = 0;
 static MAGIC: [u8; 4] = [0x20, 0x09, 0x02, 0x14];
-static PROTOCAL_VER: u8 = 0;
 
-pub struct SourceData {
-    mime_type: Box<Vec<String>>,
-    content: Box<Vec<u8>>,
-}
+use super::source_data::SourceDataItem;
 
-pub fn receive_data(mut reader: impl Read) -> Result<Vec<SourceData>> {
+pub fn receive_data(mut reader: impl Read) -> Result<Vec<SourceDataItem>> {
     // Check magic header
     let mut magic = [0u8; 4];
     reader
@@ -29,8 +26,8 @@ pub fn receive_data(mut reader: impl Read) -> Result<Vec<SourceData>> {
     }
 
     let mut flag = [0u8; 1];
-    let mut type_list = Box::new(Vec::new());
-    let mut ret = Vec::<SourceData>::new();
+    let mut type_list = Vec::new();
+    let mut ret = Vec::<SourceDataItem>::new();
     loop {
         let r = reader.read(&mut flag).context("Failed to read flag")?;
         // EOF
@@ -40,18 +37,18 @@ pub fn receive_data(mut reader: impl Read) -> Result<Vec<SourceData>> {
         match flag[0] {
             b'M' => {
                 let mime_type = read_mime_types(&mut reader)?;
-                type_list.push(mime_type);
+                type_list.push(mime_type.to_lowercase());
             }
             b'C' => {
                 if type_list.is_empty() {
                     bail!("Failed to read content with empty mime type");
                 }
                 let content = read_content(&mut reader)?;
-                ret.push(SourceData {
+                ret.push(SourceDataItem {
                     mime_type: type_list,
-                    content: Box::new(content),
+                    content
                 });
-                type_list = Box::new(Vec::new());
+                type_list = Vec::new();
             }
             _ => {
                 bail!("Failed to parse flag {}", flag[0]);
@@ -173,7 +170,7 @@ mod tests {
         let data1 = &r[0];
         assert_eq!(data1.mime_type.len(), 2);
         assert_eq!(data1.mime_type[0], "text/plain");
-        assert_eq!(data1.mime_type[1], "TEXT");
+        assert_eq!(data1.mime_type[1], "text");
         assert_eq!(data1.content.as_slice(), b"GOOD");
         let data2 = &r[1];
         assert_eq!(data2.mime_type.len(), 1);
