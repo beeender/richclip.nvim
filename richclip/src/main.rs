@@ -24,10 +24,26 @@ fn main() {
         .stdout(in_null)
         .stderr(out_null);
 
+    // wl-clipboard does this
+    ignore_sighub();
     match daemonize.start() {
         Ok(_) => println!("Success, daemonized"),
         Err(e) => eprintln!("Error, {}", e),
     }
 
     clipboard::copy_wayland(source_data);
+}
+
+fn ignore_sighub() {
+    use core::ffi::c_int;
+    use core::ffi::c_void;
+    extern "C" {
+        fn signal(sig: c_int, handler: *const c_void);
+    }
+
+    const SIGHUB: i32 = 1;
+    const SIG_IGN: *const c_void = 1 as *const c_void;
+    unsafe {
+        signal(SIGHUB, SIG_IGN);
+    }
 }
