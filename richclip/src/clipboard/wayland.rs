@@ -12,7 +12,8 @@ use wayrs_protocols::wlr_data_control_unstable_v1::{
 };
 
 struct EventState<'a> {
-    source_data: &'a dyn SourceData
+    source_data: &'a dyn SourceData,
+    finishied: bool
 }
 
 pub fn copy_wayland(source_data: impl SourceData) {
@@ -50,8 +51,14 @@ pub fn copy_wayland(source_data: impl SourceData) {
     data_control_device.set_selection(&mut conn, Some(source));
     conn.flush(IoMode::Blocking).unwrap();
 
-    let mut state = EventState{source_data: &source_data};
+    let mut state = EventState{
+        source_data: &source_data,
+        finishied: false
+    };
     loop {
+        if state.finishied {
+            break;
+        }
         conn.recv_events(IoMode::Blocking).unwrap();
         conn.dispatch_events(&mut state);
     }
@@ -69,7 +76,8 @@ fn wl_source_cb(ctx: EventCtx<EventState, ZwlrDataControlSourceV1>) {
             file.write_all(content).unwrap();
         }
         zwlr_data_control_source_v1::Event::Cancelled => {
-            std::process::exit(0);
+            ctx.conn.break_dispatch_loop();
+            ctx.state.finishied = true;
         }
         _ => {}
     }
