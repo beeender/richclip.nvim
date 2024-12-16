@@ -34,6 +34,7 @@ pub fn receive_data(mut reader: impl Read) -> Result<Vec<SourceDataItem>> {
         if r == 0 {
             break;
         }
+        log::debug!("Read block flag '{}'", flag[0]);
         match flag[0] {
             b'M' => {
                 let mime_type = read_mime_types(&mut reader)?;
@@ -69,6 +70,7 @@ fn read_mime_types(reader: &mut impl Read) -> Result<String> {
         + ((size_buf[2] as u32) << 8)
         + size_buf[3] as u32;
 
+    log::debug!("Expected mime-type size: {}", size);
     let mut buf = vec![0u8; size as usize];
     reader
         .read_exact(&mut buf)
@@ -76,6 +78,7 @@ fn read_mime_types(reader: &mut impl Read) -> Result<String> {
 
     let mime_type = String::from_utf8(buf.to_vec())
         .with_context(|| format!("Failed to parse mime type string, {:x?}", buf))?;
+    log::debug!("Received mime-type: {}", mime_type);
     Ok(mime_type)
 }
 
@@ -89,6 +92,7 @@ fn read_content(reader: &mut impl Read) -> Result<Vec<u8>> {
         + ((size_buf[2] as u32) << 8)
         + size_buf[3] as u32;
 
+    log::debug!("Expected content size: {}", size);
     let mut buf = vec![0u8; size as usize];
     reader
         .read_exact(&mut buf)

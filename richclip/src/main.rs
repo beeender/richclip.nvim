@@ -1,4 +1,6 @@
 extern crate daemonize;
+extern crate env_logger;
+extern crate log;
 
 mod clipboard;
 mod recv;
@@ -9,6 +11,8 @@ use std::io::stdin;
 use std::fs::File;
 
 fn main() {
+    env_logger::init();
+
     let stdin = stdin();
     let source_data = recv::receive_data(&stdin).unwrap();
 
