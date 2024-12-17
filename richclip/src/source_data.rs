@@ -12,6 +12,7 @@ pub trait SourceData {
 
 impl SourceData for Vec<SourceDataItem> {
     fn content_by_mime_type(&self, mime_type: &str) -> Option<&Vec<u8>> {
+        log::debug!("content_by_mime_type was called with '{}'", mime_type);
         let mut filter_it = self
             .iter()
             .filter(|item| {
