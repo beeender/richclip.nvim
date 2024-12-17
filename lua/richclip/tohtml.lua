@@ -31,6 +31,7 @@
 --- @field title string|false
 --- @field font string
 --- @field highlights_name table<integer,string>
+--- @field highlights_styles table<string,string>
 --- @field conf vim.tohtml.opt
 
 --- @class (private) vim.tohtml.state:vim.tohtml.state.global
@@ -974,6 +975,12 @@ local function name_to_tag(name)
   return '<span class="' .. highlight_name_to_class_name(name) .. '">'
 end
 
+--- @param name string
+--- @return string
+local function name_to_style_tag(name, style_tbl)
+  return '<span style="' .. style_tbl[name] .. '">'
+end
+
 --- @param _ string
 --- @return string
 local function name_to_closetag(_)
@@ -1050,7 +1057,8 @@ local function extend_head(out, state)
     out,
     ('<meta name="colorscheme" content="%s"></meta>'):format(html_escape(colorscheme))
   )
-  extend_style(out, state)
+  -- Don't create style in the head. Embed the style.
+  -- extend_style(out, state)
   table.insert(out, '</head>')
 end
 
@@ -1063,7 +1071,8 @@ local function _extend_virt_lines(out, state, row)
     local virt_s = ''
     for _, v in ipairs(virt_line) do
       if v[2] then
-        virt_s = virt_s .. (name_to_tag(state.highlights_name[v[2]]))
+        -- virt_s = virt_s .. (name_to_tag(state.highlights_name[v[2]]))
+        virt_s = virt_s .. (name_to_style_tag(state.highlights_name[v[2]], state.highlights_styles))
       end
       virt_s = virt_s .. v[1]
       if v[2] then
@@ -1083,7 +1092,8 @@ local function _pre_text_to_html(state, row)
   local s = ''
   for _, pre_text in ipairs(style_line.pre_text) do
     if pre_text[2] then
-      s = s .. (name_to_tag(state.highlights_name[pre_text[2]]))
+      -- s = s .. (name_to_tag(state.highlights_name[pre_text[2]]))
+      s = s .. (name_to_style_tag(state.highlights_name[pre_text[2]], state.highlights_styles))
     end
     s = s .. (html_escape(pre_text[1], state.tabstop))
     if pre_text[2] then
@@ -1100,7 +1110,8 @@ end
 local function _char_to_html(state, char)
   local s = ''
   if char[2] then
-    s = s .. name_to_tag(state.highlights_name[char[2]])
+    -- s = s .. name_to_tag(state.highlights_name[char[2]])
+    s = s .. name_to_style_tag(state.highlights_name[char[2]], state.highlights_styles)
   end
   s = s .. html_escape(char[1], state.tabstop)
   if char[2] then
@@ -1116,7 +1127,8 @@ local function _virt_text_to_html(state, cell)
   local s = ''
   for _, v in ipairs(cell[3]) do
     if v[2] then
-      s = s .. (name_to_tag(state.highlights_name[v[2]]))
+      -- s = s .. (name_to_tag(state.highlights_name[v[2]]))
+      s = s .. (name_to_style_tag(state.highlights_name[v[2]], state.highlights_styles))
     end
     --- @type string
     s = s .. html_escape(v[1], state.tabstop)
@@ -1189,7 +1201,8 @@ local function extend_pre(out, state)
             end
             assert(index, 'a coles tag which has no corresponding open tag')
             for idx = index + 1, #stack do
-              s = s .. (name_to_tag(state.highlights_name[stack[idx]]))
+              -- s = s .. (name_to_tag(state.highlights_name[stack[idx]]))
+              s = s .. (name_to_style_tag(state.highlights_name[stack[idx]], state.highlights_styles))
             end
             table.remove(stack, index)
           end
@@ -1202,7 +1215,8 @@ local function extend_pre(out, state)
             end
           else
             table.insert(stack, hlid)
-            s = s .. (name_to_tag(state.highlights_name[hlid]))
+            -- s = s .. (name_to_tag(state.highlights_name[hlid]))
+            s = s .. (name_to_style_tag(state.highlights_name[hlid], state.highlights_styles))
           end
         end
 
@@ -1303,6 +1317,7 @@ local function opt_to_global_state(opt, title)
     title = opt.title or title or false,
     font = table.concat(fonts, ','),
     highlights_name = {},
+    highlights_styles = {},
     conf = opt,
   }
   return state
@@ -1339,6 +1354,41 @@ local function state_generate_style(state)
   end)
 end
 
+--- @param state vim.tohtml.state
+local function state_generate_highlight_style(state)
+  for hlid, name in pairs(state.highlights_name) do
+    --TODO(altermo) use local namespace (instead of global 0)
+    local fg = vim.fn.synIDattr(hlid, 'fg#')
+    local bg = vim.fn.synIDattr(hlid, 'bg#')
+    local decor_line = {}
+    if vim.fn.synIDattr(hlid, 'underline') ~= '' then
+      table.insert(decor_line, 'underline')
+    end
+    if vim.fn.synIDattr(hlid, 'strikethrough') ~= '' then
+      table.insert(decor_line, 'line-through')
+    end
+    if vim.fn.synIDattr(hlid, 'undercurl') ~= '' then
+      table.insert(decor_line, 'underline')
+    end
+    local c = {
+      color = fg ~= '' and cterm_to_hex(fg) or nil,
+      ['background-color'] = bg ~= '' and cterm_to_hex(bg) or nil,
+      ['font-style'] = vim.fn.synIDattr(hlid, 'italic') ~= '' and 'italic' or nil,
+      ['font-weight'] = vim.fn.synIDattr(hlid, 'bold') ~= '' and 'bold' or nil,
+      ['text-decoration-line'] = not vim.tbl_isempty(decor_line) and table.concat(decor_line, ' ')
+        or nil,
+      --TODO(altermo) if strikethrough and undercurl then the strikethrough becomes wavy
+      ['text-decoration-style'] = vim.fn.synIDattr(hlid, 'undercurl') ~= '' and 'wavy' or nil,
+    }
+    local attrs = {}
+    for attr, val in pairs(c) do
+      table.insert(attrs, attr .. ': ' .. val)
+    end
+    print(name .. " {" .. table.concat(attrs, '; ') .. "}")
+    state.highlights_styles[name] = table.concat(attrs, '; ')
+  end
+end
+
 --- @param winid integer
 --- @param opt? vim.tohtml.opt
 --- @return string[]
@@ -1349,6 +1399,7 @@ local function win_to_html(winid, opt)
   local global_state = opt_to_global_state(opt, title)
   local state = global_state_to_state(winid, global_state)
   state_generate_style(state)
+  state_generate_highlight_style(state)
 
   local html = {}
   extend_html(html, function()
