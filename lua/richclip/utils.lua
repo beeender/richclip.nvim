@@ -20,4 +20,20 @@ function M.u32_to_bytes(num)
     return string.char(res[4], res[3], res[2], res[1])
 end
 
+--- Copy & modified from telescope
+--- Telescope Wrapper around vim.notify
+---@param funname string: name of the function that will be
+---@param opts table: opts.level string, opts.msg string, opts.once bool
+M.notify = function(funname, opts)
+  opts.once = vim.F.if_nil(opts.once, false)
+  local level = vim.log.levels[opts.level]
+  if not level then
+    error("Invalid error level", 2)
+  end
+  local notify_fn = opts.once and vim.notify_once or vim.notify
+  notify_fn(string.format("[RichClip.%s]: %s", funname, opts.msg), level, {
+    title = "richclip.nvim",
+  })
+end
+
 return M
