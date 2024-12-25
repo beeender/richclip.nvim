@@ -23,4 +23,25 @@ T['u32_to_bytes'] = function()
     MiniTest.expect.equality(str, "\66\0\0\1")
 end
 
+T['exec_richclip'] = function()
+    local str = ""
+    local config = require("richclip.config")
+    config.richclip_path = "echo"
+    -- The executed command is 'echo -n abc "cde\nefg'
+    str = utils.exec_richclip({"-n", "abc", "cde\nefg"})
+    MiniTest.expect.equality(str, "abc cde\nefg")
+end
+
+T['exec_richclip_async'] = function()
+    local str = ""
+    local config = require("richclip.config")
+    config.richclip_path = "cat"
+    -- The executed command is 'echo -n abc "cde\nefg'
+    local sysobj = utils.exec_richclip_async({}, function(s) str = s end)
+    sysobj:write("some\nthing")
+    sysobj:write(nil)
+    sysobj:wait()
+    MiniTest.expect.equality(str, "some\nthing")
+end
+
 return T
