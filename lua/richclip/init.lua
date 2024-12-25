@@ -3,39 +3,61 @@ local utils = require("richclip.utils")
 local M = {}
 M.config = require("richclip.config")
 
-
-local function create_sys_obj()
-    local on_error = function(err, data)
-        print("Failed to run '", M.config.get_richclip_exe_path(), "'. \n", err,
-              "\n", data)
+local function create_sys_obj_for_copy(reg)
+    local on_exit = function(obj)
+        if obj.code == 0 then
+            return
+        end
+        print("Failed to run '", M.config.get_richclip_exe_path(), "'. \n")
+        print("Exit code:" .. obj.code)
+        print("stdout:\n", obj.stdout)
+        print("stderr:\n", obj.stderr)
+    end
+    local cmd = { M.config.get_richclip_exe_path(), "copy" }
+    -- To the primary selection
+    if reg == '*' then
+        table.insert(cmd, "--primary")
     end
     -- Runs asynchronously:
-    local sys_obj = vim.system({M.config.get_richclip_exe_path()},
-                               {stdin = true, stderr = on_error})
+    local sys_obj = vim.system(cmd, { stdin = true }, on_exit)
     return sys_obj
+end
+
+function M.copy(reg)
+    return function(lines)
+        local ser = require("richclip.ser")
+        local ser_obj = ser.prepare(lines)
+
+        local sys_obj = create_sys_obj_for_copy(reg)
+        ser.copy(ser_obj, sys_obj)
+    end
+end
+
+function M.copy_as(args)
+    local mime_type = args.fargs[2]
+    if mime_type == nil then
+        utils.notify("copyas_run", {
+            msg = 'A mime-type needs to be specified for the "copyas" command',
+            level = "ERROR"
+        })
+    end
+    local lines
+    if args.range == 0 then
+        lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
+    else
+        print("xxxx" .. args.line1 .. "yyy" .. args.line2)
+        lines = vim.api.nvim_buf_get_lines(0, args.line1 - 1, args.line2,
+            true)
+        print(lines[1])
+    end
+    local sys_obj = create_sys_obj_for_copy()
+    require("richclip.ser").copy_as(sys_obj, lines, mime_type)
 end
 
 local sub_commands = {
     copyas = {
         run = function(args)
-            local mime_type = args.fargs[2]
-            if mime_type == nil then
-                utils.notify("copyas_run", {
-                    msg = 'A mime-type needs to be specified for the "copyas" command',
-                    level = "ERROR"
-                })
-            end
-            local lines
-            if args.range == 0 then
-                lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
-            else
-                print("xxxx" .. args.line1 .. "yyy" .. args.line2)
-                lines = vim.api.nvim_buf_get_lines(0, args.line1 - 1, args.line2,
-                                                   true)
-                print(lines[1])
-            end
-            local sys_obj = create_sys_obj()
-            require("richclip.ser").copy_as(sys_obj, lines, mime_type)
+            M.copy_as(args)
         end
     }
 }
@@ -62,32 +84,6 @@ local function create_cmd()
     })
 end
 
-function M.copy(reg)
-    return function(lines)
-        table.remove(lines, #lines)
-        local ser = require("richclip.ser")
-        local ser_obj = ser.prepare(lines)
-
-        local s = table.concat(lines, '\n')
-        local on_exit = function(obj)
-            print(obj.code)
-            print(obj.signal)
-            print(obj.stdout)
-            print(obj.stderr)
-        end
-        local on_error = function(err, data)
-            print("Failed to run '", M.config.get_richclip_exe_path(), "'. \n",
-                  err, "\n", data)
-        end
-        -- Runs asynchronously:
-        local sys_obj = vim.system({M.config.get_richclip_exe_path()},
-                                   {stdin = true, stderr = on_error})
-        -- local sys_obj = vim.system({"tee", "2.log"},
-        --                            {stdin = true, stderr = on_error})
-        ser.copy(ser_obj, sys_obj)
-    end
-end
-
 function M.paste(reg)
     local clipboard = reg == '+' and 'c' or 'p'
     return function() end
@@ -102,11 +98,10 @@ function M.init()
             ['*'] = require('richclip').copy('*')
         },
         paste = {
-            ['+'] = require('richclip').paste('+'),
-            ['*'] = require('richclip').paste('*')
+            ['+'] = { M.config.get_richclip_exe_path(), 'paste' },
+            ['*'] = { M.config.get_richclip_exe_path(), 'paste', '--primary' },
         }
     }
 end
 
 return M
-

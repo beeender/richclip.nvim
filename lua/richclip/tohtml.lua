@@ -991,7 +991,7 @@ end
 --- @param tabstop string|false?
 --- @return string
 local function html_escape(str, tabstop)
-  str = str:gsub('&', '&amp;'):gsub('<', '&lt;'):gsub('>', '&gt;'):gsub('"', '&quot;')
+  str = str:gsub('&', '&amp;'):gsub('<', '&lt;'):gsub('>', '&gt;'):gsub('"', '&quot;'):gsub(' ', '&#32;')
   if tabstop then
     --- @type string
     str = str:gsub('\t', tabstop)
@@ -1049,14 +1049,15 @@ end
 local function extend_head(out, state)
   table.insert(out, '<head>')
   table.insert(out, '<meta charset="UTF-8">')
-  if state.title ~= false then
-    table.insert(out, ('<title>%s</title>'):format(state.title))
-  end
-  local colorscheme = vim.api.nvim_exec2('colorscheme', { output = true }).output
-  table.insert(
-    out,
-    ('<meta name="colorscheme" content="%s"></meta>'):format(html_escape(colorscheme))
-  )
+  -- Simplify the elements in head. Some editors (like abiword) cannot handle them.
+  -- if state.title ~= false then
+  --   table.insert(out, ('<title>%s</title>'):format(state.title))
+  -- end
+  -- local colorscheme = vim.api.nvim_exec2('colorscheme', { output = true }).output
+  -- table.insert(
+  --   out,
+  --   ('<meta name="colorscheme" content="%s"></meta>'):format(html_escape(colorscheme))
+  -- )
   -- Don't create style in the head. Embed the style.
   -- extend_style(out, state)
   table.insert(out, '</head>')
@@ -1139,11 +1140,26 @@ local function _virt_text_to_html(state, cell)
   return s
 end
 
+local function pre_to_single_line(out)
+    local ret = "<pre>"
+    for i, line in ipairs(out) do
+        -- line = string.gsub(line, ' ', '&#32;')
+        -- line = string.gsub(line, '\t', '&#09;')
+        if i ~= #out then
+            line = line .. '<br>'
+        end
+        ret = ret .. line
+    end
+    ret = ret .. '</pre>'
+    return ret
+end
+
 --- @param out string[]
 --- @param state vim.tohtml.state
-local function extend_pre(out, state)
+local function extend_pre(g_out, state)
   local styletable = state.style
-  table.insert(out, '<pre>')
+  local out = {}
+  -- table.insert(out, '<pre>')
   local out_start = #out
   local hide_count = 0
   --- @type integer[]
@@ -1252,24 +1268,33 @@ local function extend_pre(out, state)
   for row = 1, vim.api.nvim_buf_line_count(state.bufnr) + 1 do
     loop(row)
   end
-  out[out_start] = out[out_start] .. before
+  if before ~= nil and before ~= "" then
+      table.insert(out, 1, before)
+  end
   out[#out] = out[#out] .. after
   assert(#stack == 0, 'an open HTML tag was never closed')
-  table.insert(out, '</pre>')
+  --  table.insert(out, '</pre>')
+  local pre_line = pre_to_single_line(out)
+  table.insert(g_out, pre_line)
 end
 
 --- @param out string[]
+--- @param global_state vim.tohtml.state.global
 --- @param fn fun()
-local function extend_body(out, fn)
-  table.insert(out, '<body style="display: flex">')
+local function extend_body(out, global_state, fn)
+  table.insert(out, '<body>')
+  table.insert(out, ('<div style="background-color:%s;color:%s">'):format(
+                    global_state.background, global_state.foreground))
   fn()
+  table.insert(out, '</div>')
   table.insert(out, '</body>')
 end
 
 --- @param out string[]
 --- @param fn fun()
 local function extend_html(out, fn)
-  table.insert(out, '<!DOCTYPE html>')
+  -- This cannot be recognized by abiword
+  -- table.insert(out, '<!DOCTYPE html>')
   table.insert(out, '<html>')
   fn()
   table.insert(out, '</html>')
@@ -1384,7 +1409,6 @@ local function state_generate_highlight_style(state)
     for attr, val in pairs(c) do
       table.insert(attrs, attr .. ': ' .. val)
     end
-    print(name .. " {" .. table.concat(attrs, '; ') .. "}")
     state.highlights_styles[name] = table.concat(attrs, '; ')
   end
 end
@@ -1404,7 +1428,7 @@ local function win_to_html(winid, opt)
   local html = {}
   extend_html(html, function()
     extend_head(html, global_state)
-    extend_body(html, function()
+    extend_body(html, global_state, function()
       extend_pre(html, state)
     end)
   end)
