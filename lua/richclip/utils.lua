@@ -21,6 +21,29 @@ function UTILS.u32_to_bytes(num)
     return string.char(res[4], res[3], res[2], res[1])
 end
 
+-- Return a new list of the given table keys
+UTILS.table_keys = function(t)
+    local keyset = {}
+    local n = 0
+
+    for k, _ in pairs(t) do
+        n = n + 1
+        keyset[n] = k
+    end
+    return keyset
+end
+
+-- Return a slice of a table.
+UTILS.table_slice = function(tbl, first, last, step)
+    local sliced = {}
+
+    for i = first or 1, last or #tbl, step or 1 do
+        sliced[#sliced + 1] = tbl[i]
+    end
+
+    return sliced
+end
+
 --- Copy & modified from telescope
 --- Telescope Wrapper around vim.notify
 ---@param funname string: name of the function that will be
