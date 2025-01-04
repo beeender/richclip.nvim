@@ -28,7 +28,7 @@ T['exec_richclip'] = function()
     local config = require("richclip.config")
     config.richclip_path = "echo"
     -- The executed command is 'echo -n abc "cde\nefg'
-    str = utils.exec_richclip({"-n", "abc", "cde\nefg"})
+    str = utils.exec_richclip({ "-n", "abc", "cde\nefg" })
     MiniTest.expect.equality(str, "abc cde\nefg")
 end
 
@@ -42,6 +42,24 @@ T['exec_richclip_async'] = function()
     sysobj:write(nil)
     sysobj:wait()
     MiniTest.expect.equality(str, "some\nthing")
+end
+
+T['str_to_lines'] = function()
+    local str = "a\nb"
+    local lines = utils.str_to_lines(str)
+    MiniTest.expect.equality(lines, { "a", "b" })
+
+    str = ""
+    lines = utils.str_to_lines(str)
+    MiniTest.expect.equality(lines, {})
+
+    str = "a\rb"
+    lines = utils.str_to_lines(str)
+    MiniTest.expect.equality(lines, { "a", "b" })
+
+    str = "a\r\nb"
+    lines = utils.str_to_lines(str)
+    MiniTest.expect.equality(lines, { "a", "b" })
 end
 
 return T

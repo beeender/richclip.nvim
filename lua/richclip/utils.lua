@@ -44,6 +44,15 @@ UTILS.table_slice = function(tbl, first, last, step)
     return sliced
 end
 
+-- Separate string into lines
+UTILS.str_to_lines = function(str)
+    local result = {}
+    for line in str:gmatch '[^\n\r]+' do
+        table.insert(result, line)
+    end
+    return result
+end
+
 --- Copy & modified from telescope
 --- Telescope Wrapper around vim.notify
 ---@param funname string: name of the function that will be
