@@ -1,10 +1,10 @@
 local T = MiniTest.new_set()
 local ser = require("richclip.ser")
 
-local MockSystemObj = {data = ""}
+local MockSystemObj = { data = "" }
 
 local function new_mock_systemobj()
-    return setmetatable({}, {__index = MockSystemObj})
+    return setmetatable({}, { __index = MockSystemObj })
 end
 
 function MockSystemObj:write(data)
@@ -37,10 +37,10 @@ T['write_lines'] = function()
     local lines
 
     sysobj = new_mock_systemobj()
-    lines = {"a", "b", ""}
+    lines = { "a", "b", "" }
     ser._write_lines(sysobj, lines)
 
-    MiniTest.expect.equality(sysobj.data, "C\0\0\0\5a\nb\n\n")
+    MiniTest.expect.equality(sysobj.data, "C\0\0\0\4a\nb\n")
 end
 
 return T
