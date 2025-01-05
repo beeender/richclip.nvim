@@ -1,5 +1,6 @@
 local CMD = {}
 local utils = require("richclip.utils")
+local api = require("richclip.api")
 
 local function completion_callback_copyas(args)
     if #args > 1 then
@@ -49,18 +50,12 @@ local function do_paste(primary, args)
             level = "Warning"
         })
     end
-
-    local cmd_args = { "paste" }
-    if primary then
-        table.insert(cmd_args, "--primary")
-    end
+    local mime_type = nil
     if #args.fargs > 1 then
-        table.insert(cmd_args, "--type")
-        table.insert(cmd_args, args.fargs[2])
+        mime_type = args.fargs[2]
     end
-    local str = utils.exec_richclip(cmd_args)
+    local lines = api.from_clip(primary, mime_type)
     local row, col = unpack(vim.api.nvim_win_get_cursor(0))
-    local lines = utils.str_to_lines(str)
     vim.api.nvim_buf_set_text(0, row - 1, col, row - 1, col, lines)
 end
 
@@ -78,8 +73,6 @@ local sub_commands = {
 }
 
 local function command_callback(args)
-    -- for k, v in pairs(args) do print(k .. " " .. type(v)) end
-
     local cmd_name = args.fargs[1]
     if sub_commands[cmd_name] == nil then
         utils.notify("cmd_callback", {

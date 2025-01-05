@@ -41,7 +41,8 @@ API.from_clip = function(is_primary, mime_type)
     end
 
     if mime_type ~= nil then
-        table.insert(args, "--type", mime_type)
+        table.insert(args, "--type")
+        table.insert(args, mime_type)
     end
     local output = utils.exec_richclip(args)
     --- TODO: How to handle binary content?
