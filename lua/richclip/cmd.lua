@@ -3,11 +3,12 @@ local utils = require("richclip.utils")
 local api = require("richclip.api")
 
 local function completion_callback_copyas(args)
+    -- FIXME: copy accept multiple mime-types
     if #args > 1 then
         return {}
     end
     -- Just return some commom mime-types as the completion list.
-    -- The "copyas" cmd accept any string as the mime-type.
+    -- The "copy" cmd accept any string as the mime-type.
     return {
         'text/',
         'text/html',
@@ -22,7 +23,6 @@ end
 -- Load the supported mime-types by the current clipboard.
 local function completion_callback_paste(primary, args)
     if #args > 1 then
-        -- TODO:
         return {}
     end
 
@@ -40,8 +40,27 @@ local function completion_callback_paste(primary, args)
     return ret_tbl
 end
 
+local function do_copy(primary, args)
+    local mime_types
+    if #args.fargs <= 1 then
+        mime_types = utils.common_text_mime_types()
+    else
+        mime_types = utils.table_slice(args.fargs, 2, #args.fargs, 1)
+    end
+
+    local s = 0
+    local e = -1
+    if args.range ~= 0 then
+        -- nvim_buf_get_lines index is zero based
+        s = args.line1 - 1
+        e = args.line2
+    end
+    local lines = vim.api.nvim_buf_get_lines(0, s, e, false)
+    local selection = { lines = lines, mime_types = mime_types }
+    api.to_clip(primary, { selection })
+end
+
 local function do_paste(primary, args)
-    for k, v in pairs(args.fargs) do print(k .. " " .. v) end
     -- args.fargs[1] = paste
     -- args.fargs[2] = mime-type
     if #args.fargs > 2 then
@@ -60,10 +79,8 @@ local function do_paste(primary, args)
 end
 
 local sub_commands = {
-    ["copy-as"] = {
-        run = function(args)
-            --M.copy_as(args)
-        end,
+    ["copy"] = {
+        run = function(args) return do_copy(false, args) end,
         completion = completion_callback_copyas
     },
     ["paste"] = {

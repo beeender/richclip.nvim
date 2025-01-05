@@ -1,8 +1,8 @@
 local UTILS = {}
 local config = require("richclip.config")
 
--- Modified from https://stackoverflow.com/a/5244306/1396606
--- Convert uint32 to 4 bytes in big-endian
+---Convert uint32 to 4 bytes in big-endian
+---Modified from https://stackoverflow.com/a/5244306/1396606
 function UTILS.u32_to_bytes(num)
     local res = {}
     local n = math.ceil(select(2, math.frexp(num)) / 8) -- number of bytes to be used.
@@ -21,7 +21,7 @@ function UTILS.u32_to_bytes(num)
     return string.char(res[4], res[3], res[2], res[1])
 end
 
--- Return a new list of the given table keys
+---Return a new list of the given table keys
 UTILS.table_keys = function(t)
     local keyset = {}
     local n = 0
@@ -33,7 +33,7 @@ UTILS.table_keys = function(t)
     return keyset
 end
 
--- Return a slice of a table.
+---Return a slice of a table.
 UTILS.table_slice = function(tbl, first, last, step)
     local sliced = {}
 
@@ -44,7 +44,7 @@ UTILS.table_slice = function(tbl, first, last, step)
     return sliced
 end
 
--- Separate string into lines
+---Separate string into lines
 UTILS.str_to_lines = function(str)
     local result = {}
     for line in str:gmatch '[^\n\r]+' do
@@ -53,8 +53,8 @@ UTILS.str_to_lines = function(str)
     return result
 end
 
---- Copy & modified from telescope
---- Telescope Wrapper around vim.notify
+---Copy & modified from telescope
+---Telescope Wrapper around vim.notify
 ---@param funname string: name of the function that will be
 ---@param opts table: opts.level string, opts.msg string, opts.once bool
 UTILS.notify = function(funname, opts)
@@ -69,7 +69,7 @@ UTILS.notify = function(funname, opts)
     })
 end
 
--- Execute the richclip and return the stdout
+---Execute the richclip and return the stdout
 ---@param sub_cmd_line table: list of sub command and its params
 UTILS.exec_richclip = function(sub_cmd_line)
     local cmd_line = { config.get_richclip_exe_path() }
@@ -87,7 +87,7 @@ UTILS.exec_richclip = function(sub_cmd_line)
     return ret.stdout
 end
 
--- Execute the richclip asynchronously, and return the SystemObject
+---Execute the richclip asynchronously, and return the SystemObject
 ---@param sub_cmd_line table: list of sub command and its params
 ---@param stdout_callback function(string): callback for stdout
 ---@return vim.SystemObj
@@ -110,6 +110,17 @@ UTILS.exec_richclip_async = function(sub_cmd_line, stdout_callback)
     -- Runs asynchronously:
     local sysobj = vim.system(cmd_line, { stdin = true, text = true }, on_exit)
     return sysobj
+end
+
+---Return a list of common mime-types for plain text
+UTILS.common_text_mime_types = function()
+    local text_mime_types = {
+        "text/plain:charset=utf-8",
+        "UTF8_STRING",
+        "text/plain",
+        "TEXT",
+    }
+    return text_mime_types
 end
 
 return UTILS

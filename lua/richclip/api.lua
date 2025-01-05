@@ -18,7 +18,7 @@ API.to_clip = function(is_primary, selections)
         table.insert(args, "--primary")
     end
 
-    local sys_obj = utils.exec_richclip_async(args, function() end)
+    local sys_obj = utils.exec_richclip_async(args, function(_) end)
     ser._write_header(sys_obj)
 
     for _, sel in ipairs(selections) do
