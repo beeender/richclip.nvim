@@ -3,6 +3,7 @@ local api = require("richclip.api")
 local M = {}
 M.config = require("richclip.config")
 
+---Return the callback to be used by `vim.g.clipboard.copy`.
 function M.copy(reg)
     local is_primary = (reg == '*')
     local text_mime_types = {
@@ -20,7 +21,15 @@ function M.copy(reg)
             lines = lines,
             mime_types = text_mime_types
         }
-        api.copy(is_primary, { text_selection, html_selection })
+        api.to_clip(is_primary, { text_selection, html_selection })
+    end
+end
+
+---Return the callback to be used by `vim.g.clipboard.paste`.
+function M.paste(reg)
+    return function()
+        local is_primary = (reg == '*')
+        return api.from_clip(is_primary, nil)
     end
 end
 
@@ -29,12 +38,12 @@ function M.init()
     vim.g.clipboard = {
         name = 'richclip',
         copy = {
-            ['+'] = require('richclip').copy('+'),
-            ['*'] = require('richclip').copy('*')
+            ['+'] = M.copy('+'),
+            ['*'] = M.copy('*'),
         },
         paste = {
-            ['+'] = { M.config.get_richclip_exe_path(), 'paste' },
-            ['*'] = { M.config.get_richclip_exe_path(), 'paste', '--primary' },
+            ['+'] = M.paste('+'),
+            ['*'] = M.paste('*'),
         }
     }
 end
