@@ -1,5 +1,6 @@
 local CMD = {}
 local utils = require("richclip.utils")
+local binary = require("richclip.binary")
 local api = require("richclip.api")
 
 local function completion_callback_copyas(args)
@@ -30,7 +31,7 @@ local function completion_callback_paste(primary, args)
     if primary then
         table.insert(cmd_args, "--primary")
     end
-    local str = utils.exec_richclip(cmd_args)
+    local str = binary.exec_richclip(cmd_args)
     local ret_tbl = {}
     for line in string.gmatch(str, "([^\n]*)\n?") do
         if line ~= "" then

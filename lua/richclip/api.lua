@@ -2,6 +2,7 @@ local API = {}
 
 local ser = require("richclip.ser")
 local utils = require("richclip.utils")
+local binary = require("richclip.binary")
 
 ---Copy the selections to the clipboard.
 ---The {SELECTION} should be a table like:
@@ -18,7 +19,7 @@ API.to_clip = function(is_primary, selections)
         table.insert(args, "--primary")
     end
 
-    local sys_obj = utils.exec_richclip_async(args, function(_) end)
+    local sys_obj = binary.exec_richclip_async(args, function(_) end)
     ser._write_header(sys_obj)
 
     for _, sel in ipairs(selections) do
@@ -44,7 +45,7 @@ API.from_clip = function(is_primary, mime_type)
         table.insert(args, "--type")
         table.insert(args, mime_type)
     end
-    local output = utils.exec_richclip(args)
+    local output = binary.exec_richclip(args)
     --- TODO: How to handle binary content?
     return utils.str_to_lines(output)
 end

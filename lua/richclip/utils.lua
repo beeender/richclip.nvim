@@ -1,5 +1,4 @@
 local UTILS = {}
-local config = require("richclip.config")
 
 ---Convert uint32 to 4 bytes in big-endian
 ---Modified from https://stackoverflow.com/a/5244306/1396606
@@ -69,53 +68,11 @@ UTILS.notify = function(funname, opts)
     })
 end
 
----Execute the richclip and return the stdout
----@param sub_cmd_line table: list of sub command and its params
-UTILS.exec_richclip = function(sub_cmd_line)
-    local cmd_line = { config.get_richclip_exe_path() }
-    for _, v in pairs(sub_cmd_line) do table.insert(cmd_line, v) end
-
-    -- Runs synchronously:
-    local ret = vim.system(cmd_line, { text = true }):wait()
-    if ret.code ~= 0 then
-        local err_msg = "Failed to run '" .. config.get_richclip_exe_path() .. "'. \n" ..
-            "Exit code:" .. ret.code .. "\n" ..
-            "stdout:\n" .. ret.stdout .. "\n" ..
-            "stderr:\n" .. ret.stderr
-        error(err_msg)
-    end
-    return ret.stdout
-end
-
----Execute the richclip asynchronously, and return the SystemObject
----@param sub_cmd_line table: list of sub command and its params
----@param stdout_callback function(string): callback for stdout
----@return vim.SystemObj
-UTILS.exec_richclip_async = function(sub_cmd_line, stdout_callback)
-    local cmd_line = { config.get_richclip_exe_path() }
-    for _, v in pairs(sub_cmd_line) do table.insert(cmd_line, v) end
-
-    local on_exit = function(ret)
-        if ret.code == 0 then
-            stdout_callback(ret.stdout)
-            return
-        end
-        local err_msg = "Failed to run '" .. config.get_richclip_exe_path() .. "'. \n" ..
-            "Exit code:" .. ret.code .. "\n" ..
-            "stdout:\n" .. ret.stdout .. "\n" ..
-            "stderr:\n" .. ret.stderr
-        error(err_msg)
-    end
-
-    -- Runs asynchronously:
-    local sysobj = vim.system(cmd_line, { stdin = true, text = true }, on_exit)
-    return sysobj
-end
-
 ---Return a list of common mime-types for plain text
 UTILS.common_text_mime_types = function()
     local text_mime_types = {
         "text/plain:charset=utf-8",
+        "STRING",
         "UTF8_STRING",
         "text/plain",
         "TEXT",

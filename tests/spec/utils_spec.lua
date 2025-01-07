@@ -23,27 +23,6 @@ describe("ser tests", function()
         assert.equal(str, "\66\0\0\1")
     end)
 
-    it('exec_richclip', function()
-        local str = ""
-        local config = require("richclip.config")
-        config.richclip_path = "echo"
-        -- The executed command is 'echo -n abc "cde\nefg'
-        str = utils.exec_richclip({ "-n", "abc", "cde\nefg" })
-        assert.equal(str, "abc cde\nefg")
-    end)
-
-    it('exec_richclip_async', function()
-        local str = ""
-        local config = require("richclip.config")
-        config.richclip_path = "cat"
-        -- The executed command is 'echo -n abc "cde\nefg'
-        local sysobj = utils.exec_richclip_async({}, function(s) str = s end)
-        sysobj:write("some\nthing")
-        sysobj:write(nil)
-        sysobj:wait()
-        assert.equal(str, "some\nthing")
-    end)
-
     it('str_to_lines', function()
         local str = "a\nb"
         local lines = utils.str_to_lines(str)

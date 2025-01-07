@@ -2,7 +2,7 @@ local api = require("richclip.api")
 local utils = require("richclip.utils")
 
 local M = {}
-M.config = require("richclip.config")
+local config = require("richclip.config")
 
 ---Return the callback to be used by `vim.g.clipboard.copy`.
 function M.copy(reg)
@@ -23,12 +23,16 @@ end
 ---Return the callback to be used by `vim.g.clipboard.paste`.
 function M.paste(reg)
     return function()
+        require("richclip.binary").get_richclip_exe_path()
         local is_primary = (reg == '*')
         return api.from_clip(is_primary, nil)
     end
 end
 
 function M.init()
+    if config.enable_debug then
+        vim.env.RICHCLIP_LOG_FILE="/tmp/richclip.log"
+    end
     require("richclip.cmd").init()
     vim.g.clipboard = {
         name = 'richclip',

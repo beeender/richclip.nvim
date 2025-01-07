@@ -1,8 +1,7 @@
 
-local M = {}
+local CONFIG = {
+    richclip_path = nil,
+    enable_debug = true,
+}
 
-function M.get_richclip_exe_path()
-    return "/home/cc/bin/richclip"
-end
-
-return M
+return CONFIG
