@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Mock the richclip exe for binary_spec test
+echo "richclip $MOCK_RICHCLIP_VER (8cee640 x86_64-unknown-linux-gnu 2025-01-08)"

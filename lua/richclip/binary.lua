@@ -4,18 +4,19 @@ local M = {}
 local config = require("richclip.config")
 local utils = require("richclip.utils")
 
-local major_ver = '0'
-local minor_ver = '2'
-local patch_ver = '0'
+M._major_ver = '0'
+M._minor_ver = '2'
+M._patch_ver = '0'
 
 local current_file_dir = debug.getinfo(1).source:match('@?(.*/)')
 local current_file_dir_parts = vim.split(current_file_dir, '/')
 local root_dir = table.concat(utils.table_slice(current_file_dir_parts, 1, #current_file_dir_parts - 3), '/')
-local bin_dir = root_dir .. "/bin"
-local install_script_path = bin_dir .. "/install.sh"
-local richclip_bin_path = bin_dir .. "/richclip"
+-- Need to mock in test
+M._bin_dir = root_dir .. "/bin"
+local install_script_path = M._bin_dir .. "/install.sh"
+local richclip_bin_path = M._bin_dir .. "/richclip"
 
-M.exe_path = nil
+M._exe_path = nil
 M.tried_download = false
 
 local function check_richclip_version(path)
@@ -40,10 +41,10 @@ local function check_richclip_version(path)
     local ver_str = string.match(ret.stdout, pattern)
     local pattern_parts = "(%d+)%.(%d+)%.(%d+)"
     local major, minor, _ = ver_str:match(pattern_parts)
-    if (major_ver > major) or (major_ver == major and minor_ver > minor) then
+    if (M._major_ver > major) or (M._major_ver == major and M._minor_ver > minor) then
         utils.notify("binary.check_richclip_version", {
             msg = string.format("\"%s\" is at version '%s', which is lower than the required version '%s.%s.x'", path,
-                ver_str, major_ver, minor_ver),
+                ver_str, M._major_ver, M._minor_ver),
             level = "WARN"
         })
     end
@@ -51,8 +52,8 @@ local function check_richclip_version(path)
 end
 
 M.download_richclip_binary = function()
-    local ver_str = string.format("%d.%d.%d", major_ver, minor_ver, patch_ver)
-    local cmd_line = { install_script_path, ver_str, bin_dir }
+    local ver_str = string.format("%d.%d.%d", M._major_ver, M._minor_ver, M._patch_ver)
+    local cmd_line = { install_script_path, ver_str, M._bin_dir }
 
     -- Set the flag to avoid infinite download & check loop
     M.tried_download = true
@@ -80,13 +81,13 @@ M.get_richclip_exe_path = function()
         return nil
     end
 
-    if M.exe_path ~= nil then
-        return M.exe_path
+    if M._exe_path ~= nil then
+        return M._exe_path
     end
 
     if config.richclip_path ~= nil then
         if check_richclip_version(config.richclip_path) then
-            M.exe_path = config.richclip_path
+            M._exe_path = config.richclip_path
         else
             utils.notify("binary.get_richclip_exe_path", {
                 msg = config.richclip_path .. ' does not seem to be a valid "richclip" binary. Try other options.',
@@ -94,17 +95,17 @@ M.get_richclip_exe_path = function()
             })
         end
     elseif check_richclip_version("richclip") then
-        M.exe_path = "richclip"
+        M._exe_path = "richclip"
     elseif check_richclip_version(richclip_bin_path) then
-        M.exe_path = richclip_bin_path
+        M._exe_path = richclip_bin_path
     end
-    if M.exe_path == nil and (not M.tried_download) then
+    if M._exe_path == nil and (not M.tried_download) then
         utils.notify("binary.get_richclip_exe_path", {
             msg = '"richclip" binary cannot be found, download it',
             level = "WARN"
         })
         M.download_richclip_binary()
-    elseif M.exe_path == nil then
+    elseif M._exe_path == nil then
         -- Will error level cause panic so we don't have to consider return here?
         utils.notify("binary.get_richclip_exe_path", {
             msg = '"richclip" binary cannot be found. Although we tried to download it',
@@ -112,11 +113,11 @@ M.get_richclip_exe_path = function()
         })
     else
         utils.notify("binary.get_richclip_exe_path", {
-            msg = 'Use "richclip" binary from ' .. M.exe_path,
+            msg = 'Use "richclip" binary from ' .. M._exe_path,
             level = "DEBUG"
         })
     end
-    return M.exe_path
+    return M._exe_path
 end
 
 ---Execute the richclip and return the stdout
