@@ -40,4 +40,10 @@ describe("ser tests", function()
         lines = utils.str_to_lines(str)
         assert.same(lines, { "a", "b" })
     end)
+
+    it('lines_to_str', function()
+        local lines = {"a", "b", "c"}
+        local str = utils.lines_to_str(lines, " ")
+        assert.equal(str, "a b c")
+    end)
 end)

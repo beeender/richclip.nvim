@@ -112,10 +112,12 @@ M.get_richclip_exe_path = function()
             level = "ERROR"
         })
     else
-        utils.notify("binary.get_richclip_exe_path", {
-            msg = 'Use "richclip" binary from ' .. M._exe_path,
-            level = "DEBUG"
-        })
+        if config.enable_debug then
+            utils.notify("binary.get_richclip_exe_path", {
+                msg = 'Use "richclip" binary from ' .. M._exe_path,
+                level = "DEBUG"
+            })
+        end
     end
     return M._exe_path
 end
@@ -125,6 +127,10 @@ end
 M.exec_richclip = function(sub_cmd_line)
     local cmd_line = { M.get_richclip_exe_path() }
     for _, v in pairs(sub_cmd_line) do table.insert(cmd_line, v) end
+
+    if config.enable_debug then
+        print("exec_richclip() " .. utils.lines_to_str(cmd_line, " "))
+    end
 
     -- Runs synchronously:
     local ret = vim.system(cmd_line, { text = true }):wait()
@@ -140,11 +146,14 @@ end
 
 ---Execute the richclip asynchronously, and return the SystemObject
 ---@param sub_cmd_line table: list of sub command and its params
----@param stdout_callback function(string): callback for stdout
----@return vim.SystemObj
+---@param stdout_callback function(string): callback for stdout @return vim.SystemObj
 M.exec_richclip_async = function(sub_cmd_line, stdout_callback)
     local cmd_line = { M.get_richclip_exe_path() }
     for _, v in pairs(sub_cmd_line) do table.insert(cmd_line, v) end
+
+    if config.enable_debug then
+        print("exec_richclip_async() " .. utils.lines_to_str(cmd_line, " "))
+    end
 
     local on_exit = function(ret)
         if ret.code == 0 then

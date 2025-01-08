@@ -1,8 +1,25 @@
 local api = require("richclip.api")
 local utils = require("richclip.utils")
+local config = require("richclip.config")
 
 local M = {}
-local config = require("richclip.config")
+
+-- This function is supposed to be called explicitly by users to configure this
+-- plugin
+function M.setup(options)
+    if options == nil then
+        options = {}
+    end
+    config.with_defaults(options)
+
+    if config.enable_debug then
+        vim.env.RICHCLIP_LOG_FILE = "/tmp/richclip.log"
+    end
+
+    if config.set_g_clipboard then
+        M.set_g_clipboard()
+    end
+end
 
 ---Return the callback to be used by `vim.g.clipboard.copy`.
 function M.copy(reg)
@@ -29,11 +46,9 @@ function M.paste(reg)
     end
 end
 
-function M.init()
-    if config.enable_debug then
-        vim.env.RICHCLIP_LOG_FILE="/tmp/richclip.log"
-    end
-    require("richclip.cmd").init()
+---Takes over the g.clipboard
+function M.set_g_clipboard()
+    -- TODO: Check the system and quite for mac & win
     vim.g.clipboard = {
         name = 'richclip',
         copy = {

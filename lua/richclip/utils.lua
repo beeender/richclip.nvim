@@ -52,6 +52,17 @@ UTILS.str_to_lines = function(str)
     return result
 end
 
+---Combines lines into a single string
+UTILS.lines_to_str = function(lines, separator)
+    local ret = ""
+    for i, line in pairs(lines) do
+        if i > 1 then ret = ret .. separator end
+        ret = ret .. line
+    end
+
+    return ret
+end
+
 ---Copy & modified from telescope
 ---Telescope Wrapper around vim.notify
 ---@param funname string: name of the function that will be
