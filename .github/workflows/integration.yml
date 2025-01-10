@@ -1,0 +1,36 @@
+name: Integration
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Tests
+
+    runs-on: ubuntu-24.04
+
+    strategy:
+      matrix:
+        nvim-versions: ['stable', 'nightly']
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - uses: rhysd/action-setup-vim@v1
+      with:
+        neovim: true
+        version: ${{ matrix.nvim-versions }}
+
+    - name: Install dependencies
+      run: |
+        make -C ./tests prepare
+
+    - name: Run linter
+      run: luacheck lua/ tests/spec/
+
+    - name: Run tests
+      run: make -C ./tests test
