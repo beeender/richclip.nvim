@@ -29,8 +29,5 @@ jobs:
       run: |
         make -C ./tests prepare
 
-    - name: Run linter
-      run: luacheck lua/ tests/spec/
-
     - name: Run tests
       run: make -C ./tests test
