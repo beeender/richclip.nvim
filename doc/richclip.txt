@@ -34,7 +34,9 @@ Options							*richclip-setup-options*
 >
     require("richclip").setup({
 	--- Specify the richclip executable path. If it is nil, the plugin
-	--- will try to download it automatically.
+	--- will try to download it to 'plugin_dir/bin' automatically.
+	--- The plugin tries to search for the executable in:
+	--- 'richclip_path' if it is set, '$PATH', 'plugin_dir/bin'.
 	richclip_path = nil
 	--- Set g:clipboard to let richclip take over the clipboard.
 	set_g_clipboard = true
