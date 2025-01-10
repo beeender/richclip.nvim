@@ -48,7 +48,23 @@ end
 
 ---Takes over the g.clipboard
 function M.set_g_clipboard()
-    -- TODO: Check the system and quite for mac & win
+    if vim.fn['has']("win32") ~= 0 or vim.fn['has']("mac") ~= 0 then
+        utils.notify("richclip.set_g_clipboard", {
+            msg = '"richclip" does not support MacOS and Windows yet',
+            level = "WARN"
+        })
+        return
+    end
+    if vim.g.clipboard ~= nil then
+        utils.notify("richclip.set_g_clipboard", {
+            msg =
+                '"g.clipboard" has been set. "richclip" will not overwrite it. ' ..
+                'To suppress this warnning and continue using the current "g.clipboard" settings,' ..
+                ' set "richclip" option "set_g_clipboard" to "false".',
+            level = "WARN"
+        })
+        return
+    end
     vim.g.clipboard = {
         name = 'richclip',
         copy = {
