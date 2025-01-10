@@ -10,7 +10,9 @@ with extra features:
 - Copy text from Neovim buffer with specific mime-type into the clipboard.
 - Paste content with all kinds of mime-types, not only `text/plain`, from
   clipboard to Neovim.
-
+  
+ ![screenshot](images/demo_0.png)
+ 
 ## Installing
 
 The plugin requires [richchip](https://github.com/beeender/richclip) command
