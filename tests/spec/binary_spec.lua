@@ -1,7 +1,7 @@
 local binary = require("richclip.binary")
 local stub = require('luassert.stub')
 
-describe("ser tests", function()
+describe("binary tests", function()
     it('exec_richclip', function()
         local str = ""
         local stub_get_path = stub(binary, "get_richclip_exe_path")
@@ -9,6 +9,7 @@ describe("ser tests", function()
         -- The executed command is 'echo -n abc "cde\nefg'
         str = binary.exec_richclip({ "-n", "abc", "cde\nefg" })
         assert.equal(str, "abc cde\nefg")
+        stub_get_path.revert(stub_get_path)
     end)
 
     it('exec_richclip_async', function()
@@ -21,6 +22,7 @@ describe("ser tests", function()
         sysobj:write(nil)
         sysobj:wait()
         assert.equal(str, "some\nthing")
+        stub_get_path.revert(stub_get_path)
     end)
 
     it('get_richclip_exe_path', function()
@@ -40,7 +42,7 @@ describe("ser tests", function()
             binary._minor_ver, binary._patch_ver)
         config.richclip_path = mock_richclip_path;
         local path = binary.get_richclip_exe_path()
-        assert.equal(path, mock_richclip_path)
+        assert.equal(mock_richclip_path, path)
 
         -- Test an valid exe in the PATH
         binary._exe_path = nil
@@ -49,7 +51,7 @@ describe("ser tests", function()
         vim.env.PATH = mock_richclip_dir .. ":" .. vim.env.PATH
         path = binary.get_richclip_exe_path()
         -- It is in the PATH, no need for absolute path
-        assert.equal(path, "richclip")
+        assert.equal("richclip", path)
         vim.env.PATH = path_saved
     end)
 
