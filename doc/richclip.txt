@@ -1,0 +1,86 @@
+*richclip.txt*  Clipboard provider with rich features.
+==============================================================================
+CONTENTS                                      *richclip-contents*
+    1. Introduction ......................... |richclip-introduction|
+    2. Setup ................................ |richclip-setup|
+    3. Commands ............................. |richclip-commands|
+    4. API .................................. |richclip-api|
+==============================================================================
+1. INTRODUCTION						*richclip-introduction*
+richclip makes the neovim capable of copying the source code in multiple
+formats, especially HTML format, which can be pasted to the rich text editors
+with the neovim colur scheme.
+It also enables the power of pasting content in other formats than text/plain
+into neovim.
+==============================================================================
+2. SETUP						*richclip-setup*
+
+------------------------------------------------------------------------------
+lazy.nvim						*richclip-setup-lazy*
+
+>
+    {
+        'beeender/richclip.nvim',
+        config = function() require("richclip").setup() end
+    }
+<
+
+By default, richclip tries to make itself as the clipboard provider for neovim
+by setting |g:clipboard|. Change option set_g_clipboard to false if it is not
+intended.
+
+------------------------------------------------------------------------------
+Options							*richclip-setup-options*
+>
+    require("richclip").setup({
+	--- Specify the richclip executable path. If it is nil, the plugin
+	--- will try to download it automatically.
+	richclip_path = nil
+	--- Set g:clipboard to let richclip take over the clipboard.
+	set_g_clipboard = true
+	--- To print debug logs
+	enable_debug = false
+    })
+<
+
+==============================================================================
+3. COMMANDS						*richclip-commands*
+
+:Richclip copy [mime_type_1] [mime_type_2]..		*Richclip-Copy*
+Copy the current visual selection into the clipboard with the specified
+mime-types. Common TEXT mime-types will be used if none is given. The whole
+current file will be copied if the command is not called with a range.
+
+:Richclip paste [mime_type]			    	*Richclip-Paste*
+Try to paste the content with the specified mime-type from the clipboard.
+Trigger the completion list after 'load' sub-command to show what mime-types
+are supported by the current clipboard content. Common TEXT mime-type will be
+used if the type argument is omitted.
+
+==============================================================================
+4. API							*richclip-api*
+richclip.setup({options})			    	*richclip.setup()*
+Configures this plugin. See |richclip-setup-options|.
+
+richclip.copy(reg)					*richclip.copy()*
+richclip.paste(reg)					*richclip.paste()*
+
+Callback functions to be used to setup |g:clipboard|.
+If the `opt.set_g_clipboard = false`, the |g:clipboard| can also be configured
+to use richclip through these two callbacks like:
+>
+    local richclip = require("richclip")
+    vim.g.clipboard = {
+        name = 'richclip',
+        copy = {
+            ['+'] = richclip.copy('+'),
+            ['*'] = richclip.copy('*'),
+        },
+        paste = {
+            ['+'] = richclip.paste('+'),
+            ['*'] = richclip.paste('*'),
+        }
+    }
+<
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:noet:fen:noet:
