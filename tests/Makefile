@@ -5,7 +5,7 @@ RUN=nvim --headless --noplugin -u init.vim
 .PHONY: all nvim test watch prepare
 
 prepare:
-	git submodule update --depth 1 --init
+	git clone --depth=1 https://github.com/nvim-lua/plenary.nvim vendor/plenary.nvim
 
 nvim:
 	@nvim --noplugin -u spec.vim

@@ -1,2 +1,2 @@
-deps/*
+tests/vendor/*
 bin/richclip
