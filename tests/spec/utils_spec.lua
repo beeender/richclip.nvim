@@ -30,7 +30,7 @@ describe("ser tests", function()
 
         str = ""
         lines = utils.str_to_lines(str)
-        assert.same(lines, {})
+        assert.same(lines, {""})
 
         str = "a\rb"
         lines = utils.str_to_lines(str)
@@ -39,6 +39,10 @@ describe("ser tests", function()
         str = "a\r\nb"
         lines = utils.str_to_lines(str)
         assert.same(lines, { "a", "b" })
+
+        str = "a\n\nb"
+        lines = utils.str_to_lines(str)
+        assert.same(lines, { "a", "", "b" })
     end)
 
     it('lines_to_str', function()
