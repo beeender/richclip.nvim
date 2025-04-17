@@ -45,11 +45,10 @@ end
 
 ---Separate string into lines
 UTILS.str_to_lines = function(str)
-    local result = {}
-    for line in str:gmatch '[^\n\r]+' do
-        table.insert(result, line)
-    end
-    return result
+    -- TODO: This feels slow
+    str = str:gsub("\r\n", "\n")
+    str = str:gsub("\r", "\n")
+    return vim.split(str, "\n")
 end
 
 ---Combines lines into a single string
