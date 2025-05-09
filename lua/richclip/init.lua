@@ -48,9 +48,9 @@ end
 
 ---Takes over the g.clipboard
 function M.set_g_clipboard()
-    if vim.fn['has']("win32") ~= 0 or vim.fn['has']("mac") ~= 0 then
+    if vim.fn['has']("win32") ~= 0 then
         utils.notify("richclip.set_g_clipboard", {
-            msg = '"richclip" does not support MacOS and Windows yet',
+            msg = '"richclip" does not support Windows yet',
             level = "WARN"
         })
         return

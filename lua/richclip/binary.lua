@@ -73,9 +73,9 @@ M.download_richclip_binary = function()
 end
 
 M.get_richclip_exe_path = function()
-    if vim.fn['has']("win32") ~= 0 or vim.fn['has']("mac") ~= 0 then
+    if vim.fn['has']("win32") ~= 0 then
         utils.notify("binary.get_richclip_exe_path", {
-            msg = '"richclip" does not support Windows and MacOs yet',
+            msg = '"richclip" does not support Windows yet',
             level = "ERROR"
         })
         return nil
