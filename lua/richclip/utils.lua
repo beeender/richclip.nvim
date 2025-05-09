@@ -81,7 +81,7 @@ end
 ---Return a list of common mime-types for plain text
 UTILS.common_text_mime_types = function()
     local text_mime_types = {
-        "text/plain:charset=utf-8",
+        "text/plain;charset=utf-8",
         "STRING",
         "UTF8_STRING",
         "text/plain",
