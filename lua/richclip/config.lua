@@ -5,7 +5,11 @@ CONFIG.with_defaults = function(options)
     --- it automatically.
     CONFIG.richclip_path = options.richclip_path or nil
     --- Set g:clipboard to let richclip take over the clipboard.
-    CONFIG.set_g_clipboard = options.set_g_clipboard or true
+    if options.set_g_clipboard == nil then
+        CONFIG.set_g_clipboard = true
+    else
+        CONFIG.set_g_clipboard = options.set_g_clipboard
+    end
     --- To print debug logs
     CONFIG.enable_debug = options.debug or false
 end
