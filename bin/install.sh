@@ -35,9 +35,23 @@ download() {
         ;;
     Darwin*)
         pushd "$TARGET_DIR"
-        curl -fsSL \
-            "https://github.com/beeender/richclip/releases/download/v${VERSION_STR}/richclip_v${VERSION_STR}_aarch64-apple-darwin.tar.gz" | \
-            tar -xz
+        arch="$(uname -m)"
+        case "${arch}" in
+        arm64|aarch64)
+            curl -fsSL \
+                "https://github.com/beeender/richclip/releases/download/v${VERSION_STR}/richclip_v${VERSION_STR}_aarch64-apple-darwin.tar.gz" | \
+                tar -xz
+            ;;
+        x86_64)
+            curl -fsSL \
+                "https://github.com/beeender/richclip/releases/download/v${VERSION_STR}/richclip_v${VERSION_STR}_x86_64-apple-darwin.tar.gz" | \
+                tar -xz
+            ;;
+        *)
+            echoerr "Unsupported Darwin architecture: '${arch}'"
+            exit 1
+            ;;
+        esac
         popd
         ;;
     CYGWIN* | MINGW* | MSYS_NT*)
