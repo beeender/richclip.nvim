@@ -34,7 +34,11 @@ download() {
         popd
         ;;
     Darwin*)
-        echoerr "Mac build is not available yet."
+        pushd "$TARGET_DIR"
+        curl -fsSL \
+            "https://github.com/beeender/richclip/releases/download/v${VERSION_STR}/richclip_v${VERSION_STR}_aarch64-apple-darwin.tar.gz" | \
+            tar -xz
+        popd
         ;;
     CYGWIN* | MINGW* | MSYS_NT*)
         echoerr "Windows build is not available yet."
