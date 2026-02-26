@@ -4,9 +4,9 @@ local M = {}
 local config = require("richclip.config")
 local utils = require("richclip.utils")
 
-M._major_ver = '0'
-M._minor_ver = '2'
-M._patch_ver = '1'
+M._major_ver = "0"
+M._minor_ver = "3"
+M._patch_ver = "0"
 
 local current_file_dir = debug.getinfo(1).source:match('@?(.*/)')
 local current_file_dir_parts = vim.split(current_file_dir, '/')
