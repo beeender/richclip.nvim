@@ -55,7 +55,26 @@ download() {
         popd
         ;;
     CYGWIN* | MINGW* | MSYS_NT*)
-        echoerr "Windows build is not available yet."
+        pushd "$TARGET_DIR"
+        arch="$(uname -m)"
+        case "${arch}" in
+        arm64|aarch64)
+            target="aarch64-pc-windows-msvc"
+            ;;
+        x86_64)
+            target="x86_64-pc-windows-msvc"
+            ;;
+        *)
+            echoerr "Unsupported Windows architecture: '${arch}'"
+            exit 1
+            ;;
+        esac
+        archive="richclip_v${VERSION_STR}_${target}.zip"
+        curl -fsSLO \
+            "https://github.com/beeender/richclip/releases/download/v${VERSION_STR}/${archive}"
+        tar -xf "$archive"
+        rm "$archive"
+        popd
         ;;
     *)
         echoerr "Unknown system '$unameOut'"

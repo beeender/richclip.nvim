@@ -4,6 +4,10 @@ local ser = require("richclip.ser")
 local utils = require("richclip.utils")
 local binary = require("richclip.binary")
 
+local function use_primary(is_primary)
+    return is_primary and vim.fn.has("win32") == 0
+end
+
 ---Copy the selections to the clipboard.
 ---The {SELECTION} should be a table like:
 ---{
@@ -15,7 +19,7 @@ local binary = require("richclip.binary")
 ---@param selections SELECTION[]
 API.to_clip = function(is_primary, selections)
     local args = { "copy" }
-    if is_primary then
+    if use_primary(is_primary) then
         table.insert(args, "--primary")
     end
 
@@ -37,7 +41,7 @@ end
 ---@return [string]
 API.from_clip = function(is_primary, mime_type)
     local args = { "paste" }
-    if is_primary then
+    if use_primary(is_primary) then
         table.insert(args, "--primary")
     end
 

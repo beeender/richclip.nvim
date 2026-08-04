@@ -13,7 +13,7 @@ function M.setup(options)
     config.with_defaults(options)
 
     if config.enable_debug then
-        vim.env.RICHCLIP_LOG_FILE = "/tmp/richclip.log"
+        vim.env.RICHCLIP_LOG_FILE = vim.fs.joinpath(vim.fn.stdpath("log"), "richclip.log")
     end
 
     if config.set_g_clipboard then
@@ -48,13 +48,6 @@ end
 
 ---Takes over the g.clipboard
 function M.set_g_clipboard()
-    if vim.fn['has']("win32") ~= 0 then
-        utils.notify("richclip.set_g_clipboard", {
-            msg = '"richclip" does not support Windows yet',
-            level = "WARN"
-        })
-        return
-    end
     if vim.g.clipboard ~= nil then
         utils.notify("richclip.set_g_clipboard", {
             msg =

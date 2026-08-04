@@ -15,10 +15,10 @@ with extra features:
  
 ## Installing
 
-The plugin requires [richchip](https://github.com/beeender/richclip) command
+The plugin requires [richclip](https://github.com/beeender/richclip) command
 line utility to be installed. The plugin will try to download the utility if
-necessary. Or it can be installed separately.
-See [richchip#install](https://github.com/beeender/richclip?tab=readme-ov-file#installing).
+necessary on Linux, macOS, and Windows. Or it can be installed separately.
+See [richclip#install](https://github.com/beeender/richclip?tab=readme-ov-file#installing).
 
 ### lazy.nvim
 
@@ -49,7 +49,7 @@ require("richclip").setup({
 
 ### Copy the highlighted code
 
-By default, `richchip.nvim` will set itself as the Neovim clipboard provider,
+By default, `richclip.nvim` will set itself as the Neovim clipboard provider,
 `"+y` (or other hotkeys set by users) will copy the current selection to the
 clipboard in both `text/plain` and `text/html` format. So the paste client, like
 a word processor, can choose the preferred format to use.
