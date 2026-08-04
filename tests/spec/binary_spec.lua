@@ -57,7 +57,7 @@ describe("binary tests", function()
 
     it('download_richclip_binary', function()
         local old_dir = binary._bin_dir
-        local exe_path = "/tmp/richclip"
+        local exe_path = "/tmp/richclip" .. (vim.fn.has("win32") ~= 0 and ".exe" or "")
         vim.fn['delete'](exe_path)
         binary._bin_dir = "/tmp"
 

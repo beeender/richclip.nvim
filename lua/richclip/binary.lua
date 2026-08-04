@@ -5,19 +5,25 @@ local config = require("richclip.config")
 local utils = require("richclip.utils")
 
 M._major_ver = "0"
-M._minor_ver = "3"
+M._minor_ver = "4"
 M._patch_ver = "0"
 
-local current_file_dir = debug.getinfo(1).source:match('@?(.*/)')
-local current_file_dir_parts = vim.split(current_file_dir, '/')
-local root_dir = table.concat(utils.table_slice(current_file_dir_parts, 1, #current_file_dir_parts - 3), '/')
+local current_file = debug.getinfo(1).source:gsub("^@", "")
+local root_dir = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(current_file)))
+local installer_dir = vim.fs.joinpath(root_dir, "bin")
 -- Need to mock in test
-M._bin_dir = root_dir .. "/bin"
-local install_script_path = M._bin_dir .. "/install.sh"
-local richclip_bin_path = M._bin_dir .. "/richclip"
+M._bin_dir = installer_dir
 
 M._exe_path = nil
 M.tried_download = false
+
+local function is_windows()
+    return vim.fn.has("win32") ~= 0
+end
+
+local function richclip_bin_path()
+    return vim.fs.joinpath(M._bin_dir, is_windows() and "richclip.exe" or "richclip")
+end
 
 local function check_richclip_version(path)
     if vim.fn['executable'](path) == 0 then
@@ -37,23 +43,58 @@ local function check_richclip_version(path)
         return false
     end
 
-    local pattern = "(%d+%.%d+%.[^ ]*)"
-    local ver_str = string.match(ret.stdout, pattern)
-    local pattern_parts = "(%d+)%.(%d+)%.(%d+)"
-    local major, minor, _ = ver_str:match(pattern_parts)
-    if (M._major_ver > major) or (M._major_ver == major and M._minor_ver > minor) then
+    local ver_str = ret.stdout:match("(%d+%.%d+%.[^%s]+)")
+    local major, minor, patch
+    if ver_str ~= nil then
+        major, minor, patch = ver_str:match("(%d+)%.(%d+)%.(%d+)")
+    end
+    if patch == nil then
         utils.notify("binary.check_richclip_version", {
-            msg = string.format("\"%s\" is at version '%s', which is lower than the required version '%s.%s.x'", path,
-                ver_str, M._major_ver, M._minor_ver),
+            msg = string.format("Could not determine the version of \"%s\" from:\n%s", path, ret.stdout),
             level = "WARN"
         })
+        return false
+    end
+
+    local installed = { tonumber(major), tonumber(minor), tonumber(patch) }
+    local required = { tonumber(M._major_ver), tonumber(M._minor_ver), tonumber(M._patch_ver) }
+    local supported = false
+    for i = 1, 3 do
+        if installed[i] ~= required[i] then
+            supported = installed[i] > required[i]
+            break
+        end
+        supported = true
+    end
+    if not supported then
+        utils.notify("binary.check_richclip_version", {
+            msg = string.format("\"%s\" is at version '%s', which is lower than the required version '%s.%s.%s'",
+                path, ver_str, M._major_ver, M._minor_ver, M._patch_ver),
+            level = "WARN"
+        })
+        return false
     end
     return true
 end
 
 M.download_richclip_binary = function()
     local ver_str = string.format("%d.%d.%d", M._major_ver, M._minor_ver, M._patch_ver)
-    local cmd_line = { install_script_path, ver_str, M._bin_dir }
+    local cmd_line
+    if is_windows() then
+        cmd_line = {
+            "powershell.exe",
+            "-NoProfile",
+            "-NonInteractive",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            vim.fs.joinpath(installer_dir, "install.ps1"),
+            ver_str,
+            M._bin_dir,
+        }
+    else
+        cmd_line = { vim.fs.joinpath(installer_dir, "install.sh"), ver_str, M._bin_dir }
+    end
 
     -- Set the flag to avoid infinite download & check loop
     M.tried_download = true
@@ -73,14 +114,6 @@ M.download_richclip_binary = function()
 end
 
 M.get_richclip_exe_path = function()
-    if vim.fn['has']("win32") ~= 0 then
-        utils.notify("binary.get_richclip_exe_path", {
-            msg = '"richclip" does not support Windows yet',
-            level = "ERROR"
-        })
-        return nil
-    end
-
     if M._exe_path ~= nil then
         return M._exe_path
     end
@@ -96,8 +129,8 @@ M.get_richclip_exe_path = function()
         end
     elseif check_richclip_version("richclip") then
         M._exe_path = "richclip"
-    elseif check_richclip_version(richclip_bin_path) then
-        M._exe_path = richclip_bin_path
+    elseif check_richclip_version(richclip_bin_path()) then
+        M._exe_path = richclip_bin_path()
     end
     if M._exe_path == nil and (not M.tried_download) then
         utils.notify("binary.get_richclip_exe_path", {
